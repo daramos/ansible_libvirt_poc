@@ -1,4 +1,10 @@
 ---
+- name: Install necessary packages
+  yum:
+    name: 
+      - libvirt
+      - virt-install
+
 - name: Create necessary directories
   file:
     path:  "{{ item }}"
