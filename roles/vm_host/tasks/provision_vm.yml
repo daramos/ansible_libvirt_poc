@@ -1,0 +1,37 @@
+- name: Provision in libvirt
+  import_tasks: prepare_cloud_init.yml
+
+- name: Generate image and xml paths for {{ vm_hostname }} VM
+  set_fact:
+    vm_image_path: "{{ host_vm_storage_dir }}/{{vm_hostname}}_{{ vm_disk_size }}_{{ vm_cloud_image_filename }}"
+    vm_xml_path: "{{ host_vm_storage_dir }}/{{vm_hostname}}.xml"
+
+- name: stat vm image file
+  stat: 
+    path: "{{ vm_image_path }}"
+    get_checksum: False
+    get_md5: False
+  register: vm_image_stat
+
+- name: Cloning and resizing base image
+  block:
+    - command: "qemu-img create -f qcow2 -o preallocation=metadata {{ vm_image_path }} {{ vm_disk_size }}"
+    - command: "virt-resize --expand /dev/sda1 {{ base_cloud_image_path|quote  }} {{ vm_image_path|quote }}"
+  rescue:
+    - name: "Cloning failed.... Cleaning up. This cleanup task is expected to fail"
+      file:
+        path: "{{ vm_image_path }}"
+        state: absent
+      failed_when: true
+  when: vm_image_stat.stat.exists == False
+
+
+- name: setting permissions on image file
+  file:
+    path: "{{ vm_image_path }}"
+    group: kvm
+    mode: '664'
+
+
+- name: define VM in libvirt
+  import_tasks: create_libvirt_vm.yml

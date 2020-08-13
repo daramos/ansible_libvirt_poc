@@ -1,0 +1,3 @@
+local-hostname: {{ vm_hostname }}
+instance-id: "{{ lookup('password', '/dev/null length=10 chars=ascii_letters') }}"
+dsmode: local

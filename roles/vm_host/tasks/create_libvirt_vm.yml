@@ -1,0 +1,43 @@
+---
+- name: Stopping existing vm (if exists) for {{ vm_hostname }} 
+  command: "virsh destroy {{ vm_hostname }}"
+  register: result
+  failed_when: result.rc > 0 and "failed to get domain" not in result.stderr and "domain is not running" not in result.stderr
+  changed_when: result.rc == 0
+
+- name: Removing existing vm (if exists) for {{ vm_hostname }} 
+  command: "virsh undefine {{ vm_hostname }}"
+  register: result
+  failed_when: result.rc > 0 and "failed to get domain" not in result.stderr
+  changed_when: result.rc == 0
+
+- name: generating virtual machine xml for {{ vm_hostname }} 
+  command: >
+      virt-install --import
+        --name {{ vm_hostname }} 
+        --ram {{ vm_ram_in_mb }}
+        --vcpus {{ vm_vcpu }}
+        --os-type linux 
+        --disk path={{ vm_image_path }},format=qcow2,bus=virtio 
+        --disk path={{ vm_cloud_init_img }},format=qcow2,bus=virtio 
+        --os-variant {{ vm_os_variant }}
+        --network network:{{ host_vm_network_name }},model=virtio
+        --uuid {{ vm_uuid }}
+        --mac={{ vm_mac_address }}
+        --print-xml
+  register: vm_xml_cmd
+
+- name: "Save xml for {{ vm_hostname }} "
+  copy:
+    dest: "{{ vm_xml_path }}"
+    content: "{{ vm_xml_cmd.stdout }}"
+    mode: "664"
+
+- name: Defining virtual machine {{ vm_hostname }} 
+  command: "virsh define --file {{ vm_xml_path }}"
+ 
+- name: starting virtual machine {{ vm_hostname }} 
+  command: "virsh start {{ vm_hostname }}"
+
+- name: Setting VM {{ vm_hostname }} to autostart
+  command: "virsh autostart {{ vm_hostname }}"

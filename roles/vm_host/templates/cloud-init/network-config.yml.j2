@@ -1,0 +1,12 @@
+version: 2
+ethernets:
+    eth0:
+        match:
+            macaddress: "{{ vm_mac_address }}"
+        wakeonlan: true
+        dhcp4: true
+        addresses:
+            - {{ vm_ip_address }}{{ net_subnet_mask }}
+        gateway4: {{ net_gateway }}
+        nameservers:
+            addresses: [ {{ net_dns_server }} ]

@@ -1,0 +1,15 @@
+- hosts: vmhost
+  become: yes
+  remote_user: root
+  roles: 
+    - vm_host
+
+- hosts: vms
+  gather_facts: no
+  tasks:
+  - name: Waiting for VM to become available
+    wait_for_connection:
+      timeout: 60
+  - name: Gathering facts
+    setup:
+

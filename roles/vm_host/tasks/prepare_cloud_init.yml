@@ -1,0 +1,62 @@
+---
+- name: Generate cloud init storage path for {{ vm_hostname }}
+  set_fact:
+    vm_cloud_init_dir: "{{ cloud_init_data_path }}/{{ vm_hostname }}"
+- name: Generate additional cloud-init paths for {{ vm_hostname }}
+  set_fact:
+    vm_cloud_init_user_conf: "{{ vm_cloud_init_dir }}/user-data"
+    vm_cloud_init_meta_conf: "{{ vm_cloud_init_dir }}/meta-data"
+    vm_cloud_init_network_conf: "{{ vm_cloud_init_dir }}/network-config"
+    vm_cloud_init_img: "{{ vm_cloud_init_dir }}/user-data.img"
+
+- name: "Create cloud init directory for {{ vm_hostname }}"
+  file:
+    path:  "{{ vm_cloud_init_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create cloud init user data
+  template: 
+    src: cloud-init/user-data.yml.j2
+    dest: "{{ vm_cloud_init_user_conf }}"
+    mode: '0644'
+  register: cloud_init_user_data
+
+- name: Create cloud init meta data
+  template: 
+    src: cloud-init/meta-data.yml.j2
+    dest: "{{ vm_cloud_init_meta_conf }}"
+    mode: '0644'
+  register: cloud_init_meta_data
+
+- name: Create cloud init network data
+  template: 
+    src: cloud-init/network-config.yml.j2
+    dest: "{{ vm_cloud_init_network_conf }}"
+    mode: '0644'
+  register: cloud_init_network_data
+
+# Find out if the img file doesn't exist yet
+- name: stat cloud init img file
+  stat: 
+    path: "{{ vm_cloud_init_img }}"
+    get_checksum: False
+    get_md5: False
+  register: cloud_init_image
+
+- name: Create cloud init image file
+  block:
+    - command: "truncate --size 2M {{ vm_cloud_init_img }}"
+    - command: "mkfs.vfat -n cidata {{ vm_cloud_init_img }}"
+    - command: "mcopy -oi {{ vm_cloud_init_img }} {{ vm_cloud_init_user_conf }} {{ vm_cloud_init_meta_conf }} {{ vm_cloud_init_network_conf }} ::"
+  when: cloud_init_user_data.changed == True 
+        or cloud_init_meta_data.changed == True 
+        or cloud_init_network_data.changed == True 
+        or cloud_init_image.stat.exists == False
+
+
+- name: setting permissions on cloud init image file
+  file:
+    path: "{{ vm_cloud_init_img }}"
+    group: kvm
+    mode: '664'

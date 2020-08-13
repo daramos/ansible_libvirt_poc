@@ -1,0 +1,39 @@
+---
+- name: Create necessary directories
+  file:
+    path:  "{{ item }}"
+    state: directory
+    group: kvm
+    mode: '0775'
+  with_items:
+    - "{{ host_vm_storage_dir }}"
+    - "{{ base_images_dir }}"
+    - "{{ cloud_init_data_path }}"
+
+- name: generate cloud image path
+  set_fact:
+    base_cloud_image_path: "{{base_images_dir}}/{{ vm_cloud_image_filename }}"
+
+- name: Download base image for VMs
+  get_url:
+    url: "{{ vm_cloud_image_url }}"
+    dest: "{{ base_cloud_image_path }}"
+    mode: '0440'
+
+- name: Create/Provision VMs
+  import_tasks: host_configure_vmnet.yml
+
+- name: Create/Provision VMs
+  include_tasks: provision_vm.yml
+  vars:
+    vm_hostname: "{{ item }}"
+    vm_root_pass: "{{ hostvars[item]['vm_root_pass'] }}"
+    vm_root_ssh_auth_key: "{{ hostvars[item]['vm_root_ssh_auth_key'] }}"
+    vm_mac_address: "{{ hostvars[item]['vm_mac_address'] }}"
+    vm_ip_address: "{{ hostvars[item]['ansible_host'] }}"
+    vm_disk_size: "{{ hostvars[item]['vm_disk_size'] }}"
+    vm_vcpu: "{{ hostvars[item]['vm_vcpu'] }}"
+    vm_ram_in_mb: "{{ hostvars[item]['vm_ram_in_mb'] }}"
+    vm_os_variant: "{{ hostvars[item]['vm_os_variant'] }}"
+    vm_uuid: "{{ hostvars[item]['vm_uuid'] }}"
+  with_items: "{{ groups[ansible_vms_group] }}"

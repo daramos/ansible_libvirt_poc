@@ -1,0 +1,6 @@
+### Simple ansible playbook for configuring a vm host and provisioning VMs with libvirt
+ansible-playbook -K configure_vms.yml
+
+Tested on ubuntu 20.04 host machine with centos 8.2 cloud image
+
+VM host network setup currently depends on NetworkManager (nmcli)
