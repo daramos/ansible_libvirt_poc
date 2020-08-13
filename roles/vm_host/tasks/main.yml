@@ -4,6 +4,7 @@
     name: 
       - libvirt
       - virt-install
+      - libguestfs-tools-c
 
 - name: Create necessary directories
   file:
@@ -26,7 +27,7 @@
     dest: "{{ base_cloud_image_path }}"
     mode: '0440'
 
-- name: Create/Provision VMs
+- name: Configure Networking
   import_tasks: host_configure_vmnet.yml
 
 - name: Create/Provision VMs
