@@ -35,3 +35,9 @@
 
 - name: define VM in libvirt
   import_tasks: create_libvirt_vm.yml
+
+- name: Add VM hostnames to host file on VM Host
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ vm_ip_address | regex_escape() }}"
+    line: "{{ vm_ip_address }} {{ vm_hostname }}"
