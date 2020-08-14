@@ -6,6 +6,12 @@
       - virt-install
       - libguestfs-tools-c
 
+- name: Ensure libvirt daemon is running
+  systemd:
+    name: libvirtd
+    state: started
+    enabled: yes
+
 - name: Create necessary directories
   file:
     path:  "{{ item }}"
