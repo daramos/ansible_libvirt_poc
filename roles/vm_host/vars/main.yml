@@ -1,0 +1,12 @@
+vm_base_image_path: "{{vmhost_base_images_dir}}/{{ vm_base_image_filename }}"
+
+# to make sure we are idompotent, 
+# we create a uuid seeded from the vm_net template, a placeholder uuid is used in the template
+vmnet_uuid: "{{ lookup('template', './templates/vm_net.xml.j2') | to_uuid }}"
+
+
+vm_cloud_init_dir: "{{ vmhost_cloud_init_storage_path }}/{{ vm_hostname }}"
+vm_cloud_init_user_conf: "{{ vm_cloud_init_dir }}/user-data"
+vm_cloud_init_meta_conf: "{{ vm_cloud_init_dir }}/meta-data"
+vm_cloud_init_network_conf: "{{ vm_cloud_init_dir }}/network-config"
+vm_cloud_init_img: "{{ vm_cloud_init_dir }}/user-data.img"

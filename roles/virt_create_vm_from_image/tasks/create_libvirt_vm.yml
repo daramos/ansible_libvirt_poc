@@ -1,0 +1,48 @@
+---
+- name: generating virtual machine xml for {{ vm_hostname }} 
+  command: "{{ lookup('template', './templates/virt_install_cmd.j2') }}"
+  register: vm_xml_cmd
+  changed_when: false
+
+- name: "Save xml for {{ vm_hostname }} "
+  copy:
+    dest: "{{ vm_xml_path }}"
+    content: "{{ vm_xml_cmd.stdout
+                | regex_replace(__mac_address_placeholder, vm_mac_address)
+                | regex_replace(__hostname_placeholder, vm_hostname)
+                | regex_replace(__uuid_placeholder, vm_uuid)}}"
+    mode: "664"
+  register: vm_xml_file
+
+- name: Determine if VM definition exists
+  command: virsh desc {{ vm_hostname }}
+  failed_when: false
+  register: virt_recreate_needed
+  changed_when:  vm_force_recreate == True or vm_image_create_task.changed == True or vm_xml_file.changed == True or virt_recreate_needed.rc != 0
+
+
+- name: Stopping existing vm (if exists) for {{ vm_hostname }}
+  command: "virsh destroy {{ vm_hostname }}"
+  register: result
+  failed_when: result.rc > 0 and "failed to get domain" not in result.stderr and "domain is not running" not in result.stderr
+  changed_when: result.rc == 0
+  when: virt_recreate_needed.changed == True
+
+- name: Removing existing vm (if exists) for {{ vm_hostname }}
+  command: "virsh undefine {{ vm_hostname }}"
+  register: result
+  failed_when: result.rc > 0 and "failed to get domain" not in result.stderr
+  changed_when: result.rc == 0
+  when: virt_recreate_needed.changed == True
+
+- name: Defining virtual machine {{ vm_hostname }}
+  command: "virsh define --file {{ vm_xml_path }}"
+  when: virt_recreate_needed.changed == True
+ 
+- name: starting virtual machine {{ vm_hostname }}
+  command: "virsh start {{ vm_hostname }}"
+  when: virt_recreate_needed.changed == True
+
+- name: Setting VM {{ vm_hostname }} to autostart
+  command: "virsh autostart {{ vm_hostname }}"
+  when: virt_recreate_needed.changed == True

@@ -1,7 +1,10 @@
+{# If this template is modified and any variables are added/removed
+you MUST update the vmnet_uuid definition in vars to regenerate a new UUID
+-#}
 <network>
-  <name>{{ host_vm_network_name }}</name>
-  <uuid>f02329bb-7575-47cc-b5b0-53669925480d</uuid>
+  <name>{{ vmhost_network_name }}</name>
+  <uuid>{{ __vmnet_placeholder_uuid }}</uuid>
   <forward mode="bridge">
-    <interface dev="{{ host_ethernet_interface }}" mode="bridge"/>
+    <interface dev="{{ vmhost_ethernet_interface }}" mode="bridge"/>
   </forward>
 </network>

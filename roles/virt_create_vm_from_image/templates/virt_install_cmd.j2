@@ -1,0 +1,21 @@
+{# 
+We first create an XML with a fake MAC address, uuid, and name 
+(because it will fail if the the vm is already defined)
+
+We also use  --check all=off since if the VM is already defined, 
+  the disk will be in use ("Disk [...] is already in use by other guests")
+#}virt-install 
+    --import
+    --name {{ __hostname_placeholder }}
+    --ram {{ vm_ram_in_mb }}
+    --vcpus {{ vm_vcpu_count }}
+    --disk path={{ vm_image_path }},format=qcow2,bus=virtio 
+    {% for additional_disk_img in vm_additional_disk_images %}
+    --disk path={{ additional_disk_img }},format=qcow2,bus=virtio 
+    {% endfor %}
+    --os-variant {{ vm_os_variant }}
+    --network network:{{ vm_network_name }},model=virtio
+    --uuid {{ __uuid_placeholder }}
+    --mac={{ __mac_address_placeholder }}
+    --print-xml
+    --check all=off

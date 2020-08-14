@@ -1,0 +1,24 @@
+---
+required_vars:
+  - vm_base_image_path
+  - vmhost_vm_storage_dir
+  - vm_hostname
+  - vm_disk_size
+  - vm_ram_in_mb
+  - vm_vcpu_count
+  - vm_os_variant # from `osinfo-query os`
+  - vm_network_name
+  - vm_mac_address
+  - vm_uuid
+
+vm_force_recreate: False
+vm_autostart: True
+vm_additional_disk_images: []
+vm_image_file_owner: qemu
+vm_image_file_group: kvm
+vm_image_file_perms: '644'
+libvirt_uri: qemu:///system
+
+__uuid_placeholder: '00000001-0000-0000-0000-000000000001'
+__hostname_placeholder: 'VM_HOSTNAME_GOES_HERE'
+__mac_address_placeholder: '11:22:33:44:55:66'

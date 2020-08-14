@@ -4,7 +4,7 @@ ssh_pwauth: 1
 users:
   - name: root
     lock_passwd: false
-    passwd: {{ vm_root_pass | password_hash('sha256', vm_password_salt) }}
+    passwd: {{ vm_root_pass | password_hash('sha256', (1234 | random(seed=vm_hostname) | string)) }}
     shell: /bin/bash
     ssh-authorized-keys:
       - {{ vm_root_ssh_auth_key }}

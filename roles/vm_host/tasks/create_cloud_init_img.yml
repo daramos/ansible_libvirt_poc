@@ -1,14 +1,4 @@
 ---
-- name: Generate cloud init storage path for {{ vm_hostname }}
-  set_fact:
-    vm_cloud_init_dir: "{{ cloud_init_data_path }}/{{ vm_hostname }}"
-- name: Generate additional cloud-init paths for {{ vm_hostname }}
-  set_fact:
-    vm_cloud_init_user_conf: "{{ vm_cloud_init_dir }}/user-data"
-    vm_cloud_init_meta_conf: "{{ vm_cloud_init_dir }}/meta-data"
-    vm_cloud_init_network_conf: "{{ vm_cloud_init_dir }}/network-config"
-    vm_cloud_init_img: "{{ vm_cloud_init_dir }}/user-data.img"
-
 - name: "Create cloud init directory for {{ vm_hostname }}"
   file:
     path:  "{{ vm_cloud_init_dir }}"
@@ -63,3 +53,4 @@
     path: "{{ vm_cloud_init_img }}"
     owner: qemu
     group: kvm
+  when: cloud_init_changed == True

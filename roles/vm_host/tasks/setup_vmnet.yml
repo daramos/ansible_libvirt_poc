@@ -1,0 +1,36 @@
+---
+# To determine if the network configuration needs to change, the vmnet_uuid is calculated from the template result
+# if the template does not match the current configuration (or doesn't exist) then this task will fail
+- name: Check if vmnet is up to date
+  command: virsh net-name {{ vmnet_uuid }}
+  failed_when: False
+  changed_when: vmnet_check_task.rc != 0
+  register: vmnet_check_task
+
+
+- name: Create vmnet xml file
+  block:
+    - tempfile:
+        state: file
+        suffix: temp_vmnet
+      register: vmnet_file
+    - copy:
+        content: "{{ lookup('template', './templates/vm_net.xml.j2') | regex_replace(__vmnet_placeholder_uuid, vmnet_uuid) }}"
+        dest: "{{ vmnet_file.path }}"
+  when: vmnet_check_task.changed == True
+
+
+- name: import the vmnet xml
+  block:
+    - command: virsh net-destroy {{ vmhost_network_name }}
+      register: result
+      failed_when: result.rc != 0 and " is not active" not in result.stderr and "Network not found" not in result.stderr
+      changed_when: result.rc == 0
+    - command: virsh net-undefine {{ vmhost_network_name }}
+      register: result
+      failed_when: result.rc != 0 and " is not active" not in result.stderr and "Network not found" not in result.stderr
+      changed_when: result.rc == 0
+    - command: virsh net-define {{ vmnet_file.path }}
+    - command: virsh net-autostart {{ vmhost_network_name }}
+    - command: virsh net-start {{ vmhost_network_name }}
+  when: vmnet_check_task.changed == True

@@ -1,0 +1,19 @@
+---
+- name: Download base image for VM
+  get_url:
+    url: "{{ vm_base_image_url }}"
+    dest: "{{ vm_base_image_path }}"
+    mode: '0440'
+
+- import_tasks: 'create_cloud_init_img.yml'
+
+- include_role: 
+    name: virt_create_vm_from_image
+  vars:
+    vm_force_recreate: "{{ cloud_init_changed }}"
+
+- name: Add VM hostnames to host file on VM Host
+  lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ vm_ip_address | regex_escape() }}"
+    line: "{{ vm_ip_address }} {{ vm_hostname }}"

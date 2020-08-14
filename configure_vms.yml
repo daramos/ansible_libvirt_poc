@@ -1,10 +1,10 @@
-- hosts: vmhost
+- hosts: vmhosts
   become: yes
   remote_user: root
   roles: 
     - vm_host
 
-- hosts: vms
+- hosts: virtual_machines
   gather_facts: no
   tasks:
   - name: Waiting for VM to become available

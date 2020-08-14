@@ -13,34 +13,42 @@
     group: kvm
     mode: '0775'
   with_items:
-    - "{{ host_vm_storage_dir }}"
-    - "{{ base_images_dir }}"
-    - "{{ cloud_init_data_path }}"
+    - "{{ vmhost_vm_storage_dir }}"
+    - "{{ vmhost_base_images_dir }}"
+    - "{{ vmhost_cloud_init_storage_path }}"
 
-- name: generate cloud image path
-  set_fact:
-    base_cloud_image_path: "{{base_images_dir}}/{{ vm_cloud_image_filename }}"
+- name: Create macvlan bridge for host-to-guest communication
+  template:
+    src: network-manager-macvlan.nmconnection.j2
+    dest: /etc/NetworkManager/system-connections/{{ vmhost_macvlan_name }}.nmconnection
+    mode: '600' # from man NetworkManager.conf 'it will ignore files that are readable or writeable by any user or group other than root'
+    owner: root
+    group: root
+  register: nm_macvlan_connection
 
-- name: Download base image for VMs
-  get_url:
-    url: "{{ vm_cloud_image_url }}"
-    dest: "{{ base_cloud_image_path }}"
-    mode: '0440'
+- name: Reload Network Manager connection
+  command: nmcli connection reload
+  when: nm_macvlan_connection.changed == True
 
-- name: Configure Networking
-  import_tasks: host_configure_vmnet.yml
+- name: Configure LibVirt Network
+  import_tasks: setup_vmnet.yml
 
 - name: Create/Provision VMs
-  include_tasks: provision_vm.yml
+  include_tasks: setup_vm.yml
   vars:
-    vm_hostname: "{{ item }}"
-    vm_root_pass: "{{ hostvars[item]['vm_root_pass'] }}"
-    vm_root_ssh_auth_key: "{{ hostvars[item]['vm_root_ssh_auth_key'] }}"
-    vm_mac_address: "{{ hostvars[item]['vm_mac_address'] }}"
-    vm_ip_address: "{{ hostvars[item]['ansible_host'] }}"
-    vm_disk_size: "{{ hostvars[item]['vm_disk_size'] }}"
-    vm_vcpu: "{{ hostvars[item]['vm_vcpu'] }}"
-    vm_ram_in_mb: "{{ hostvars[item]['vm_ram_in_mb'] }}"
-    vm_os_variant: "{{ hostvars[item]['vm_os_variant'] }}"
-    vm_uuid: "{{ hostvars[item]['vm_uuid'] }}"
-  with_items: "{{ groups[ansible_vms_group] }}"
+    vm_base_image_url: "{{ hostvars[vm_hostname]['vm_base_image_url'] }}"
+    vm_base_image_filename: "{{ hostvars[vm_hostname]['vm_base_image_filename'] }}"
+    vm_root_pass: "{{ hostvars[vm_hostname]['vm_root_pass'] }}"
+    vm_root_ssh_auth_key: "{{ hostvars[vm_hostname]['vm_root_ssh_auth_key'] }}"
+    vm_mac_address: "{{ hostvars[vm_hostname]['vm_mac_address'] }}"
+    vm_ip_address: "{{ hostvars[vm_hostname]['ansible_host'] }}"
+    vm_disk_size: "{{ hostvars[vm_hostname]['vm_disk_size'] }}"
+    vm_vcpu_count: "{{ hostvars[vm_hostname]['vm_vcpu_count'] }}"
+    vm_ram_in_mb: "{{ hostvars[vm_hostname]['vm_ram_in_mb'] }}"
+    vm_os_variant: "{{ hostvars[vm_hostname]['vm_os_variant'] }}"
+    vm_additional_disk_images:
+      - "{{ vm_cloud_init_dir }}/user-data.img"
+    vm_network_name: "{{ vmhost_network_name }}"
+  with_items: "{{ groups[virtual_machines_ansible_group] }}"
+  loop_control:
+    loop_var: vm_hostname

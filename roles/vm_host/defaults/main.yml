@@ -1,4 +1,5 @@
 ---
-vm_cloud_image_url: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-ec2-8.2.2004-20200611.2.x86_64.qcow2
-vm_cloud_image_filename: centos_8_2.qcow2
 vm_password_salt: salt12345dasda
+vmhost_cloud_init_storage_path: "{{ vmhost_vm_storage_dir }}"
+
+__vmnet_placeholder_uuid: 'UUID_GOES_HERE'

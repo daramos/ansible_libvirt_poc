@@ -1,0 +1,7 @@
+vm_base_image_filename: "{{ vm_base_image_path | basename }}"
+vm_xml_path: "{{ vmhost_vm_storage_dir }}/{{vm_hostname}}.xml"
+# We generate the VM file with a filename containing the base image file and the drive size so that we don't need 
+# to regenerate it every run unless one of those variables changes. 
+vm_image_path: "{{ vmhost_vm_storage_dir }}/{{vm_hostname}}_{{ vm_disk_size }}_{{ vm_base_image_filename }}"
+
+vm_uuid: "{{ vm_hostname | to_uuid }}"

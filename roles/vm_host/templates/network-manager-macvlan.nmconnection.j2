@@ -1,0 +1,24 @@
+[connection]
+id={{  vmhost_macvlan_name }}
+uuid={{ vmhost_macvlan_name | to_uuid }}
+type=macvlan
+interface-name={{  vmhost_macvlan_name }}
+permissions=
+timestamp=1597431337
+
+[macvlan]
+mode=2
+parent={{ vmhost_ethernet_interface }}
+
+[ipv4]
+address1={{ ansible_host }}/32
+dns-search=
+method=manual
+never-default=true
+route-metric=50
+route1={{ vmhost_macvlan_subnet }}
+
+[ipv6]
+method=disabled
+
+[proxy]

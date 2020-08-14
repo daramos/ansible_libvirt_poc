@@ -1,0 +1,47 @@
+---
+
+- name: "Check required variables"
+  fail: 
+    msg: "Variable '{{ required_var }}' is not defined"
+  when: required_var not in vars
+  with_items: "{{required_vars}}"
+  loop_control:
+    loop_var: required_var
+
+- name: Install necessary packages for vm provisionining
+  yum:
+    name: 
+      - libvirt
+      - virt-install
+      - libguestfs-tools-c
+      - python3-libvirt
+
+- name: Allocating vm image file
+  command: 
+    cmd: "qemu-img create -f qcow2 -o preallocation=metadata {{ vm_image_path }} {{ vm_disk_size }}"
+    creates: "{{ vm_image_path }}"
+  register: vm_image_create_task
+
+- block:
+    - name: Cloning and resizing base image
+      command: "virt-resize --expand /dev/sda1 {{ vm_base_image_path|quote  }} {{ vm_image_path|quote }}"
+  rescue:
+    - name: "Cloning failed.... Deleting image file. This cleanup task is expected to fail"
+      file:
+        path: "{{ vm_image_path }}"
+        state: absent
+      failed_when: true
+  when: vm_image_create_task.changed == True
+
+- name: setting permissions on image file
+  file:
+    path: "{{ vm_image_path }}"
+    group: "{{ vm_image_file_group }}"
+    owner: "{{ vm_image_file_owner }}"
+    mode: "{{ vm_image_file_perms }}"
+  when: vm_image_create_task.changed == True
+
+
+- name: define VM in libvirt
+  import_tasks: create_libvirt_vm.yml
+
