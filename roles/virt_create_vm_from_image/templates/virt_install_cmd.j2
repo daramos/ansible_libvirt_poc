@@ -4,7 +4,8 @@ We first create an XML with a fake MAC address, uuid, and name
 
 We also use  --check all=off since if the VM is already defined, 
   the disk will be in use ("Disk [...] is already in use by other guests")
-#}virt-install 
+-#}
+virt-install 
     --import
     --name {{ __hostname_placeholder }}
     --ram {{ vm_ram_in_mb }}

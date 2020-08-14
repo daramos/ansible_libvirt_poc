@@ -46,7 +46,7 @@
     vm_base_image_filename: "{{ hostvars[vm_hostname]['vm_base_image_filename'] }}"
     vm_root_pass: "{{ hostvars[vm_hostname]['vm_root_pass'] }}"
     vm_root_ssh_auth_key: "{{ hostvars[vm_hostname]['vm_root_ssh_auth_key'] }}"
-    vm_mac_address: "{{ hostvars[vm_hostname]['vm_mac_address'] }}"
+    vm_mac_address: "{{ hostvars[vm_hostname]['vm_mac_address'] | default('52:54:00' | random_mac(seed=vm_hostname)) }}"
     vm_ip_address: "{{ hostvars[vm_hostname]['ansible_host'] }}"
     vm_disk_size: "{{ hostvars[vm_hostname]['vm_disk_size'] }}"
     vm_vcpu_count: "{{ hostvars[vm_hostname]['vm_vcpu_count'] }}"
